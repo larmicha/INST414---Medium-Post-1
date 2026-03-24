@@ -1,0 +1,39 @@
+#Set Up:
+# Import libraries
+from google.colab import drive
+import os
+import json
+import pandas as pd
+import string
+import numpy as np
+# Mount drive
+drive.mount('/content/drive', force_remount=True)
+# Set assignment folder path
+lab_folder = '/content/drive/MyDrive/Courses/INST414/Week 3'
+os.chdir(lab_folder)
+# Load in dataset
+df_raw = pd.read_csv('Global YouTube Statistics.csv',encoding='latin')
+pd.set_option('display.max_columns', None)
+display(df_raw)
+
+# Exploratory Analysis:
+df_raw.info()
+# Determine which category of video gets the most views
+df_views = df_raw.groupby(['category'])['video views'].sum().sort_values(ascending=False).reset_index()
+df_views.head(10)
+
+# Determine which category and Youtuber gets the most views
+df_YT = df_raw.groupby(['category','Youtuber'])['video views'].sum().sort_values(ascending=False).reset_index()
+df_YT.head(10)
+
+# Determine which category of video gets the most annual earnings on average
+df_earn_avg = df_raw.groupby(['category'])['highest_yearly_earnings'].mean().sort_values(ascending=False).reset_index()
+df_earn_avg.head(10)
+
+# Determine which category of video gets the most annual earnings on average
+df_low_avg = df_raw.groupby(['category'])['lowest_yearly_earnings'].mean().sort_values(ascending=False).reset_index()
+df_low_avg.head(10)
+
+# Determine which category of video gets the most annual earnings on average
+df_earn_avg = df_raw.groupby(['category','Youtuber','rank'])['highest_yearly_earnings'].mean().sort_values(ascending=False).reset_index()
+df_earn_avg.head(10)

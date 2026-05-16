@@ -1,0 +1,172 @@
+#Set Up:
+# Import libraries
+from google.colab import drive
+import os
+import json
+import pandas as pd
+import string
+import numpy as np
+# Mount drive
+drive.mount('/content/drive', force_remount=True)
+# Set assignment folder path
+lab_folder = '/content/drive/MyDrive/Courses/INST414/Week 3'
+os.chdir(lab_folder)
+# Load in dataset
+df_raw = pd.read_csv('Global YouTube Statistics.csv',encoding='latin')
+df_raw.index = df_raw.index + 1
+pd.set_option('display.max_columns', None)
+display(df_raw)
+
+# Exploratory Analysis:
+df_raw.info()
+# Determine which category of video gets the most views
+df_views = df_raw.groupby(['category'])['video views'].sum().sort_values(ascending=False).reset_index()
+df_views.index = df_views.index + 1
+df_views.head(10)
+# Determine which category and Youtuber gets the most views
+df_YT = df_raw.groupby(['category','Youtuber'])['video views'].sum().sort_values(ascending=False).reset_index()
+df_YT.index = df_YT.index + 1
+df_YT.head(10)
+# Determine which category or niche of channel gets the most annual earnings on average
+df_earn_avg = df_raw.groupby(['category'])['highest_yearly_earnings'].mean().sort_values(ascending=False).reset_index()
+df_earn_avg.index = df_earn_avg.index + 1
+df_earn_avg.head(10)
+# Determine which category or niche of channel gets the most annual earnings on average when earnings are lowest
+df_low_avg = df_raw.groupby(['category'])['lowest_yearly_earnings'].mean().sort_values(ascending=False).reset_index()
+df_low_avg.index += 1
+df_low_avg.head(10)
+# Determine which creator and category of channel get the most annual earnings on average
+df_earn_avg = df_raw.groupby(['category','Youtuber','rank'])['highest_yearly_earnings'].mean().sort_values(ascending=False).reset_index()
+df_earn_avg.index += 1
+df_earn_avg.head(10)
+# Extension
+# Create a subset of regular creators
+df_reg = df_raw.groupby(['category','Youtuber','rank'])['highest_yearly_earnings'].mean().sort_values(ascending=True).reset_index()
+df_reg.index += 1
+# Filter df_reg by those that made $100,000 or less
+df_reg = df_reg[df_reg['highest_yearly_earnings'] <= 100_000]
+df_reg.head(200)
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Grab the list of 176 regular creators
+reg_youtubers = df_reg['Youtuber'].unique().tolist()
+
+# Add target creator to the list to pull from the raw data
+target_creator = "DaFuq!?Boom!"
+names_to_pull = reg_youtubers + [target_creator]
+
+# Filter df_raw to only include these creators and set Youtuber as the index
+df_subset = df_raw[df_raw['Youtuber'].isin(names_to_pull)].copy()
+df_subset = df_subset.drop_duplicates(subset=['Youtuber']).set_index('Youtuber')
+
+# Define features for computing cosine similarity
+features = [
+    'subscribers', 'video views', 'uploads',
+    'video_views_for_the_last_30_days', 'lowest_yearly_earnings',
+    'highest_yearly_earnings', 'subscribers_for_last_30_days'
+]
+
+# Fill empty cells with 0 and scale the data
+df_features = df_subset[features].fillna(0)
+scaler = MinMaxScaler()
+scaled_features = scaler.fit_transform(df_features)
+scaled_df = pd.DataFrame(scaled_features, index=df_features.index, columns=features)
+
+# Create the target creator scaled vector
+target_vector = scaled_df.loc[[target_creator]]
+
+# Calculate cosine similarity against all regular creators
+sim_scores = cosine_similarity(target_vector, scaled_df)[0]
+
+# Create a results DataFrame
+sim_df = pd.DataFrame({
+    'Youtuber': scaled_df.index,
+    'Similarity_Score': sim_scores
+})
+
+# Filter out target creator and sort
+sim_df = sim_df[sim_df['Youtuber'] != target_creator]
+top_5_similar = sim_df.sort_values(by='Similarity_Score', ascending=False).head(5)
+
+print(top_5_similar)
+
+# New Target: T-Series
+# Add target creator to the list to pull from the raw data
+target_creator = "T-Series"
+names_to_pull = reg_youtubers + [target_creator]
+
+# Filter df_raw to only include these creators and set Youtuber as the index
+df_subset = df_raw[df_raw['Youtuber'].isin(names_to_pull)].copy()
+df_subset = df_subset.drop_duplicates(subset=['Youtuber']).set_index('Youtuber')
+
+# Define features for computing cosine similarity
+features = [
+    'subscribers', 'video views', 'uploads',
+    'video_views_for_the_last_30_days', 'lowest_yearly_earnings',
+    'highest_yearly_earnings', 'subscribers_for_last_30_days'
+]
+
+# Fill empty cells with 0 and scale the data
+df_features = df_subset[features].fillna(0)
+scaler = MinMaxScaler()
+scaled_features = scaler.fit_transform(df_features)
+scaled_df = pd.DataFrame(scaled_features, index=df_features.index, columns=features)
+
+# Create the target creator scaled vector
+target_vector = scaled_df.loc[[target_creator]]
+
+# Calculate cosine similarity against all regular creators
+sim_scores = cosine_similarity(target_vector, scaled_df)[0]
+
+# Create a results DataFrame
+sim_df = pd.DataFrame({
+    'Youtuber': scaled_df.index,
+    'Similarity_Score': sim_scores
+})
+
+# Filter out target creator and sort
+sim_df = sim_df[sim_df['Youtuber'] != target_creator]
+top_5_similar = sim_df.sort_values(by='Similarity_Score', ascending=False).head(5)
+
+print(top_5_similar)
+
+# New Target: Cocomelon - Nursery Rhymes
+# Add target creator to the list to pull from the raw data
+target_creator = "Cocomelon - Nursery Rhymes"
+names_to_pull = reg_youtubers + [target_creator]
+
+# Filter df_raw to only include these creators and set Youtuber as the index
+df_subset = df_raw[df_raw['Youtuber'].isin(names_to_pull)].copy()
+df_subset = df_subset.drop_duplicates(subset=['Youtuber']).set_index('Youtuber')
+
+# Define features for computing cosine similarity
+features = [
+    'subscribers', 'video views', 'uploads',
+    'video_views_for_the_last_30_days', 'lowest_yearly_earnings',
+    'highest_yearly_earnings', 'subscribers_for_last_30_days'
+]
+
+# Fill empty cells with 0 and scale the data
+df_features = df_subset[features].fillna(0)
+scaler = MinMaxScaler()
+scaled_features = scaler.fit_transform(df_features)
+scaled_df = pd.DataFrame(scaled_features, index=df_features.index, columns=features)
+
+# Create the target creator scaled vector
+target_vector = scaled_df.loc[[target_creator]]
+
+# Calculate cosine similarity against all regular creators
+sim_scores = cosine_similarity(target_vector, scaled_df)[0]
+
+# Create a results DataFrame
+sim_df = pd.DataFrame({
+    'Youtuber': scaled_df.index,
+    'Similarity_Score': sim_scores
+})
+
+# Filter out target creator and sort
+sim_df = sim_df[sim_df['Youtuber'] != target_creator]
+top_5_similar = sim_df.sort_values(by='Similarity_Score', ascending=False).head(5)
+
+print(top_5_similar)
